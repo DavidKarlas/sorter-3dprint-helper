@@ -1,0 +1,30 @@
+[
+ {
+  "id": "bambu-lab-a1",
+  "name": "Bambu Lab A1"
+ },
+ {
+  "id": "bambu-lab-a1-mini",
+  "name": "Bambu Lab A1 mini"
+ },
+ {
+  "id": "bambu-lab-p1s",
+  "name": "Bambu Lab P1S"
+ },
+ {
+  "id": "bambu-lab-p2s",
+  "name": "Bambu Lab P2S"
+ },
+ {
+  "id": "bambu-lab-x1-carbon",
+  "name": "Bambu Lab X1 Carbon"
+ },
+ {
+  "id": "bambu-lab-x1e",
+  "name": "Bambu Lab X1E"
+ },
+ {
+  "id": "bambu-lab-h2s",
+  "name": "Bambu Lab H2S"
+ }
+]

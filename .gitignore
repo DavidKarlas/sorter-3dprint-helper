@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Build outputs and downloads never belong in git
+*.3mf
+*.stl
+*.zip
+.cache/
+
+.DS_Store

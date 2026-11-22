@@ -1,0 +1,17 @@
+{
+  "_comment": "Print poses for parts whose STL is not exported in the pose they print in. The catalog says so in each part's 'Print orientation' attribute; this file turns that note into a rotation. 'lay-flat' rests the part on its largest flat face, 'flip' turns it upside down, 'matrix' is an explicit 3x3 rotation (column vectors, applied about the part's bounding-box centre). 'derived_from' names the STL a matrix was measured on: when the catalog ships a different file the hint is still applied and the build warns.",
+  "frame-90deg-bracket": {
+    "matrix": [
+      [-0.250000986, 0.433013211, -0.866024864],
+      [-0.306187027, -0.88388319, -0.353553405],
+      [-0.918558115, 0.176776878, 0.353554697]
+    ],
+    "derived_from": "frame-90deg-bracket",
+    "source": "the curated 90-deg-brackets.3mf plate (corner down, legs rising at 45 degrees)"
+  },
+  "orange-pi-housing-roof": {"rotate": "flip"},
+  "orange-pi-housing-wall-west": {"rotate": "lay-flat"},
+  "orange-pi-housing-wall-east": {"rotate": "lay-flat"},
+  "orange-pi-housing-wall-north": {"rotate": "lay-flat"},
+  "orange-pi-housing-wall-south": {"rotate": "lay-flat"}
+}

@@ -1,0 +1,527 @@
+{
+ "PLA Basic": [
+  {
+   "name": "Orange",
+   "hex": "#FF6A13",
+   "code": "10300"
+  },
+  {
+   "name": "Pumpkin Orange",
+   "hex": "#FF9016",
+   "code": "10301"
+  },
+  {
+   "name": "Blue Gray",
+   "hex": "#5B6579",
+   "code": "10602"
+  },
+  {
+   "name": "Cobalt Blue",
+   "hex": "#0056B8",
+   "code": "10604"
+  },
+  {
+   "name": "Turquoise",
+   "hex": "#00B1B7",
+   "code": "10605"
+  },
+  {
+   "name": "Cyan",
+   "hex": "#0086D6",
+   "code": "10603"
+  },
+  {
+   "name": "Blue",
+   "hex": "#0A2989",
+   "code": "10601"
+  },
+  {
+   "name": "Gray",
+   "hex": "#8E9089",
+   "code": "10103"
+  },
+  {
+   "name": "Silver",
+   "hex": "#A6A9AA",
+   "code": "10102"
+  },
+  {
+   "name": "Light Gray",
+   "hex": "#D1D3D5",
+   "code": "10104"
+  },
+  {
+   "name": "Dark Gray",
+   "hex": "#545454",
+   "code": "10105"
+  },
+  {
+   "name": "Mistletoe Green",
+   "hex": "#3F8E43",
+   "code": "10502"
+  },
+  {
+   "name": "Bright Green",
+   "hex": "#BECF00",
+   "code": "10503"
+  },
+  {
+   "name": "Bambu Green",
+   "hex": "#00AE42",
+   "code": "10501"
+  },
+  {
+   "name": "Black",
+   "hex": "#000000",
+   "code": "10101"
+  },
+  {
+   "name": "Brown",
+   "hex": "#9D432C",
+   "code": "10800"
+  },
+  {
+   "name": "Cocoa Brown",
+   "hex": "#6F5034",
+   "code": "10802"
+  },
+  {
+   "name": "Beige",
+   "hex": "#F7E6DE",
+   "code": "10201"
+  },
+  {
+   "name": "Pink",
+   "hex": "#F55A74",
+   "code": "10203"
+  },
+  {
+   "name": "Indigo Purple",
+   "hex": "#482960",
+   "code": "10701"
+  },
+  {
+   "name": "Purple",
+   "hex": "#5E43B7",
+   "code": "10700"
+  },
+  {
+   "name": "Magenta",
+   "hex": "#EC008C",
+   "code": "10202"
+  },
+  {
+   "name": "Red",
+   "hex": "#C12E1F",
+   "code": "10200"
+  },
+  {
+   "name": "Maroon Red",
+   "hex": "#9D2235",
+   "code": "10205"
+  },
+  {
+   "name": "Hot Pink",
+   "hex": "#F5547C",
+   "code": "10204"
+  },
+  {
+   "name": "Jade White",
+   "hex": "#FFFFFF",
+   "code": "10100"
+  },
+  {
+   "name": "Yellow",
+   "hex": "#F4EE2A",
+   "code": "10400"
+  },
+  {
+   "name": "Sunflower Yellow",
+   "hex": "#FEC600",
+   "code": "10402"
+  },
+  {
+   "name": "Bronze",
+   "hex": "#847D48",
+   "code": "10801"
+  },
+  {
+   "name": "Gold",
+   "hex": "#E4BD68",
+   "code": "10401"
+  }
+ ],
+ "PLA Matte": [
+  {
+   "name": "Mandarin Orange",
+   "hex": "#F99963",
+   "code": "11300"
+  },
+  {
+   "name": "Sky Blue",
+   "hex": "#56B7E6",
+   "code": "11603"
+  },
+  {
+   "name": "Marine Blue",
+   "hex": "#0078BF",
+   "code": "11600"
+  },
+  {
+   "name": "Ice Blue",
+   "hex": "#A3D8E1",
+   "code": "11601"
+  },
+  {
+   "name": "Dark Blue",
+   "hex": "#042F56",
+   "code": "11602"
+  },
+  {
+   "name": "Nardo Gray",
+   "hex": "#757575",
+   "code": "11104"
+  },
+  {
+   "name": "Ash Gray",
+   "hex": "#9B9EA0",
+   "code": "11102"
+  },
+  {
+   "name": "Apple Green",
+   "hex": "#C2E189",
+   "code": "11502"
+  },
+  {
+   "name": "Grass Green",
+   "hex": "#61C680",
+   "code": "11500"
+  },
+  {
+   "name": "Dark Green",
+   "hex": "#68724D",
+   "code": "11501"
+  },
+  {
+   "name": "Charcoal",
+   "hex": "#000000",
+   "code": "11101"
+  },
+  {
+   "name": "Dark Chocolate",
+   "hex": "#4D3324",
+   "code": "11802"
+  },
+  {
+   "name": "Latte Brown",
+   "hex": "#D3B7A7",
+   "code": "11800"
+  },
+  {
+   "name": "Dark Brown",
+   "hex": "#7D6556",
+   "code": "11801"
+  },
+  {
+   "name": "Caramel",
+   "hex": "#AE835B",
+   "code": "11803"
+  },
+  {
+   "name": "Sakura Pink",
+   "hex": "#E8AFCF",
+   "code": "11201"
+  },
+  {
+   "name": "Lilac Purple",
+   "hex": "#AE96D4",
+   "code": "11700"
+  },
+  {
+   "name": "Scarlet Red",
+   "hex": "#DE4343",
+   "code": "11200"
+  },
+  {
+   "name": "Terracotta",
+   "hex": "#B15533",
+   "code": "11203"
+  },
+  {
+   "name": "Plum",
+   "hex": "#950051",
+   "code": "11204"
+  },
+  {
+   "name": "Dark Red",
+   "hex": "#BB3D43",
+   "code": "11202"
+  },
+  {
+   "name": "Ivory White",
+   "hex": "#FFFFFF",
+   "code": "11100"
+  },
+  {
+   "name": "Bone White",
+   "hex": "#CBC6B8",
+   "code": "11103"
+  },
+  {
+   "name": "Lemon Yellow",
+   "hex": "#F7D959",
+   "code": "11400"
+  },
+  {
+   "name": "Desert Tan",
+   "hex": "#E8DBB7",
+   "code": "11401"
+  }
+ ],
+ "PETG HF": [
+  {
+   "name": "Orange",
+   "hex": "#F75403",
+   "code": "33300"
+  },
+  {
+   "name": "Blue",
+   "hex": "#002E96",
+   "code": "33600"
+  },
+  {
+   "name": "Lake Blue",
+   "hex": "#1F79E5",
+   "code": "33601"
+  },
+  {
+   "name": "Gray",
+   "hex": "#ADB1B2",
+   "code": "33101"
+  },
+  {
+   "name": "Dark Gray",
+   "hex": "#515151",
+   "code": "33103"
+  },
+  {
+   "name": "Green",
+   "hex": "#00AE42",
+   "code": "33500"
+  },
+  {
+   "name": "Lime Green",
+   "hex": "#6EE53C",
+   "code": "33501"
+  },
+  {
+   "name": "Forest Green",
+   "hex": "#39541A",
+   "code": "33502"
+  },
+  {
+   "name": "Black",
+   "hex": "#000000",
+   "code": "33102"
+  },
+  {
+   "name": "Peanut Brown",
+   "hex": "#875718",
+   "code": "33801"
+  },
+  {
+   "name": "Red",
+   "hex": "#BC0900",
+   "code": "33200"
+  },
+  {
+   "name": "White",
+   "hex": "#FFFFFF",
+   "code": "33100"
+  },
+  {
+   "name": "Yellow",
+   "hex": "#FFD00B",
+   "code": "33400"
+  },
+  {
+   "name": "Cream",
+   "hex": "#F9DFB9",
+   "code": "33401"
+  }
+ ],
+ "PETG Basic": [
+  {
+   "name": "Black",
+   "hex": "#000000",
+   "code": "30105"
+  },
+  {
+   "name": "White",
+   "hex": "#FFFFFF",
+   "code": "30106"
+  },
+  {
+   "name": "Gray",
+   "hex": "#7F7E83",
+   "code": "30107"
+  },
+  {
+   "name": "Yellow",
+   "hex": "#FCE300",
+   "code": "30402"
+  },
+  {
+   "name": "Red",
+   "hex": "#D6001C",
+   "code": "30201"
+  },
+  {
+   "name": "Reflex Blue",
+   "hex": "#001489",
+   "code": "30603"
+  },
+  {
+   "name": "Dark Brown",
+   "hex": "#4F2C1D",
+   "code": "30800"
+  },
+  {
+   "name": "Green",
+   "hex": "#009639",
+   "code": "30502"
+  },
+  {
+   "name": "Orange",
+   "hex": "#FF671F",
+   "code": "30301"
+  },
+  {
+   "name": "Pine Green",
+   "hex": "#034638",
+   "code": "30503"
+  },
+  {
+   "name": "Navy Blue",
+   "hex": "#0086D6",
+   "code": "30604"
+  },
+  {
+   "name": "Misty Blue",
+   "hex": "#688197",
+   "code": "30108"
+  },
+  {
+   "name": "Dark Beige",
+   "hex": "#DBC8B6",
+   "code": "30403"
+  },
+  {
+   "name": "Purple",
+   "hex": "#8A75D1",
+   "code": "30701"
+  },
+  {
+   "name": "Sunflower Yellow",
+   "hex": "#FFB81C",
+   "code": "30404"
+  },
+  {
+   "name": "Bright Green",
+   "hex": "#97D700",
+   "code": "30504"
+  },
+  {
+   "name": "Hot Pink",
+   "hex": "#F277C6",
+   "code": "30702"
+  }
+ ],
+ "PETG Matte": [
+  {
+   "name": "White",
+   "hex": "#FFFFFF",
+   "code": "35100"
+  },
+  {
+   "name": "Black",
+   "hex": "#000000",
+   "code": "35101"
+  },
+  {
+   "name": "Lime",
+   "hex": "#C0DF16",
+   "code": "35500"
+  },
+  {
+   "name": "Gray",
+   "hex": "#7F7E83",
+   "code": "35102"
+  },
+  {
+   "name": "Pink",
+   "hex": "#FABBCB",
+   "code": "35700"
+  },
+  {
+   "name": "Baby Blue",
+   "hex": "#B9D9EB",
+   "code": "35600"
+  },
+  {
+   "name": "Rose Beige",
+   "hex": "#F0BDA5",
+   "code": "35701"
+  },
+  {
+   "name": "Violet",
+   "hex": "#A7A4E0",
+   "code": "35702"
+  },
+  {
+   "name": "Avocado Green",
+   "hex": "#BCE194",
+   "code": "35501"
+  },
+  {
+   "name": "Yellow",
+   "hex": "#FFD100",
+   "code": "35400"
+  },
+  {
+   "name": "Dark Blue",
+   "hex": "#003087",
+   "code": "35602"
+  },
+  {
+   "name": "Cyan",
+   "hex": "#00A9E0",
+   "code": "35601"
+  },
+  {
+   "name": "Red",
+   "hex": "#D6001C",
+   "code": "35200"
+  },
+  {
+   "name": "Orange",
+   "hex": "#FF671F",
+   "code": "35300"
+  },
+  {
+   "name": "Turquoise",
+   "hex": "#00C7B1",
+   "code": "35603"
+  },
+  {
+   "name": "Hot Pink",
+   "hex": "#EF4A81",
+   "code": "35703"
+  },
+  {
+   "name": "Caramel",
+   "hex": "#BF9474",
+   "code": "35801"
+  }
+ ]
+}
