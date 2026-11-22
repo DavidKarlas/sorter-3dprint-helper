@@ -5,7 +5,9 @@
 # Runs as an unprivileged user (uid/gid 10001) and writes only to /data, so it
 # also runs with a read-only root filesystem (mount /data, and /tmp as tmpfs).
 
-FROM node:22-alpine AS web
+# The frontend is static files, the same on every platform: build it once, on
+# the build machine's own architecture, even when the image is for another.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS web
 WORKDIR /web
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -29,7 +31,11 @@ RUN groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --home-dir /data --no-create-home --shell /usr/sbin/nologin app \
     && mkdir -p /data && chown app:app /data && chmod 0750 /data
 
-ENV SORTER3MF_CACHE=/data \
+# Where this app's source is (shown on the page, see README "Licence"). CI
+# passes the repository URL; SORTER3MF_SOURCE_URL at run time overrides it.
+ARG SOURCE_URL=""
+ENV SORTER3MF_SOURCE_URL=$SOURCE_URL \
+    SORTER3MF_CACHE=/data \
     SORTER3MF_FRONTEND=/app/frontend/dist \
     HOME=/data \
     PYTHONDONTWRITEBYTECODE=1 \

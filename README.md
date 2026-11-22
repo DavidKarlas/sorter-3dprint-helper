@@ -34,6 +34,16 @@ docker run -p 8000:8000 -v sorter3mf-cache:/data sorter-3dprint-helper
 
 Tests: `cd backend && uv run pytest`.
 
+### The published image
+
+`.github/workflows/docker.yml` runs the tests and builds the image for
+amd64 and arm64 on every push and pull request. Pushes to `main` publish
+`ghcr.io/davidkarlas/sorter-3dprint-helper:latest` (and `:sha-<commit>`); a
+tag `v1.2.3` also publishes `:1.2.3` and `:1.2`. Pull requests only build.
+The image has this repository's URL built in as the source link. GitHub
+creates the package as private on its first publish: make it public in the
+package's settings, or give the cluster a pull secret.
+
 ### Running on Kubernetes
 
 The image runs as uid/gid 10001, needs no capabilities, and writes only to
@@ -49,7 +59,8 @@ PersistentVolumeClaim set `fsGroup: 10001` so the user can write to it.
 - **Outbound HTTPS** to `raw.githubusercontent.com` (the catalog) and
   `assets.basically.website` (the STLs).
 - **Probes:** `GET /api/health`.
-- **Source link:** set `SORTER3MF_SOURCE_URL` (see Licence).
+- **Source link:** the published image already points at this repository;
+  set `SORTER3MF_SOURCE_URL` only when you deploy a fork (see Licence).
 
 ```yaml
 securityContext:            # pod
@@ -59,9 +70,8 @@ securityContext:            # pod
   fsGroup: 10001
 containers:
   - name: app
-    image: sorter-3dprint-helper
+    image: ghcr.io/davidkarlas/sorter-3dprint-helper:latest
     ports: [{containerPort: 8000}]
-    env: [{name: SORTER3MF_SOURCE_URL, value: "https://github.com/<you>/sorter-3dprint-helper"}]
     securityContext:
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false
