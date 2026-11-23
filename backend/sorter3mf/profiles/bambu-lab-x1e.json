@@ -19,6 +19,8 @@
     28.0
    ]
   ],
+  "extruder_printable_area": [],
+  "extruders": 1,
   "printable_area": [
    [
     0.0,

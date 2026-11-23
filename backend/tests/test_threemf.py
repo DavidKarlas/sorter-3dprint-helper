@@ -109,3 +109,30 @@ def test_overrides_fill_every_nozzle_variant():
     plate = project_settings(x1, "Bambu PLA Matte", ["#000000"], {"curr_bed_type": "Textured PEI Plate"})
     assert plate["curr_bed_type"] == "Textured PEI Plate"
     assert "curr_bed_type" not in plate["different_settings_to_system"][0]
+
+
+def test_two_nozzle_printer_prints_everything_with_the_first(tmp_path):
+    h2c = get_printer("bambu-lab-h2c")
+    assert h2c.extruders == 2 and h2c.note
+    # the 5 mm the left nozzle cannot reach is kept clear like an excluded corner
+    assert (325.0, 0.0, 330.0, 320.0) in h2c.bed.exclude
+    s = project_settings(h2c, "Bambu PLA Matte", ["#000000", "#FFFFFF"])
+    assert s["filament_map"] == ["1", "1"] and s["filament_map_mode"] == "Manual"
+    assert s["extruder_nozzle_stats"] == ["Standard#1", "Standard#1"]
+    assert len(s["flush_volumes_matrix"]) == 2 * 4  # N x N per extruder
+    v, t = cube()
+    out = tmp_path / "h2c.3mf"
+    write_project(out, bed=h2c.bed, plates=[PlateSpec("P", [ObjectSpec("cube", "cube", 1, 100, 100, 0.0, {})])],
+                  meshes={"cube": MeshData("cube", v, t, "cube.stl")}, settings=s,
+                  app_version=h2c.bambu_studio_version, title="t")
+    with zipfile.ZipFile(out) as z:
+        plate = ET.fromstring(z.read("Metadata/model_settings.config")).find("plate")
+    meta = {m.get("key"): m.get("value") for m in plate.findall("metadata")}
+    assert meta["filament_map_mode"] == "Manual" and meta["filament_maps"] == "1 1"
+
+
+def test_one_nozzle_printers_are_left_to_bambu_studio():
+    a1 = get_printer("bambu-lab-a1")
+    assert a1.extruders == 1 and a1.note is None and a1.bed.exclude == []
+    s = project_settings(a1, "Bambu PLA Matte", ["#000000", "#FFFFFF"])
+    assert s["filament_map_mode"] == "Auto For Flush" and len(s["flush_volumes_matrix"]) == 4

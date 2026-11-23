@@ -2,6 +2,8 @@
  "bambu_studio_version": "02.09.01.70",
  "bed": {
   "bed_exclude_area": [],
+  "extruder_printable_area": [],
+  "extruders": 1,
   "printable_area": [
    [
     0.0,

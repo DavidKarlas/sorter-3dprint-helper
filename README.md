@@ -205,9 +205,15 @@ filament's profile has a bed temperature for (PETG Matte: no Cool Plate;
 PLA Matte: no Engineering Plate). Gram figures come from the catalog's PLA
 Matte slices, scaled by the filament's density.
 
-Supported: A1, A1 mini, P1S, P2S, X1 Carbon, X1E, H2S. Bambu Studio 2.9 ships
+Supported: A1, A1 mini, P1S, P2S, X1 Carbon, X1E, H2S, H2C. Bambu Studio 2.9 ships
 no PLA profile for the P1P, so it is left out (use the P1S, same bed).
-Two-nozzle printers (H2D) are not supported yet.
+The H2C has two nozzles. Every plate here is one colour, so a project for it
+prints everything with the left nozzle: every filament is mapped to it by
+hand ("Manual" in Bambu Studio's filament grouping, on every plate), and
+plates keep to the 325 mm of the 330 mm bed that nozzle reaches. The project
+also declares one standard nozzle on each side (`extruder_nozzle_stats`):
+without any, Bambu Studio does not slice the file ("No valid nozzle found").
+The H2D would work the same way once added to the template tool.
 
 ### What is already printed
 

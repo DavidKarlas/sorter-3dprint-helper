@@ -112,7 +112,17 @@ export function PrintPanel({ settings, options, update }: Props) {
 				Bambu's {printer?.process ?? '0.20mm Standard'} preset, with gyroid infill. Empty fields keep the preset's value. If walls come out
 				rough, "Recommended" sets what the Sorter community prints with: 3 walls and a slower outer wall (80 mm/s, 2500 mm/s²).
 			</p>
-			<Row label="Printer" hint={printer ? `${printer.bed.width} × ${printer.bed.depth} mm bed · ${printer.process}` : undefined}>
+			<Row
+				label="Printer"
+				hint={
+					printer ? (
+						<>
+							{printer.bed.width} × {printer.bed.depth} mm bed · {printer.process}
+							{printer.note ? <div>{printer.note}</div> : null}
+						</>
+					) : undefined
+				}
+			>
 				<select value={settings.printer} onChange={(e) => update({ printer: e.target.value })}>
 					{options.printers.map((p) => (
 						<option key={p.id} value={p.id}>

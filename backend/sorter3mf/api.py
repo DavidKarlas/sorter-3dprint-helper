@@ -164,6 +164,7 @@ def options() -> dict:
         "printers": [{"id": p.id, "name": p.name, "process": p.process, "filaments": _filament_order(p.filaments),
                       "bed_types": {f: bed_types_for(p, f) for f in p.filaments},
                       "bed": {"width": p.bed.width, "depth": p.bed.depth, "height": p.bed.height},
+                      "nozzles": p.extruders, "note": p.note,
                       "bambu_studio_version": p.bambu_studio_version}
                      for p in printers().values()],
         "bed_types": BED_TYPES,

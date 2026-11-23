@@ -40,10 +40,12 @@ MAC_APP = Path("/Applications/BambuStudio.app/Contents")
 DEFAULT_BIN = MAC_APP / "MacOS" / "BambuStudio"
 DEFAULT_PROFILES = MAC_APP / "Resources" / "profiles" / "BBL"
 
-# Single-nozzle printers. Dual-nozzle machines (H2D and friends) map
-# filaments to extruders, which this tool does not model yet. The P1P is left
-# out because Bambu Studio 2.9 ships no PLA profile that lists it; P1P owners
-# can pick the P1S (same bed).
+# Every plate the app writes is one colour, so a two-nozzle printer (H2C)
+# prints everything with its first (left) nozzle: the template records how
+# many extruders there are and the bed area each one reaches, and the backend
+# maps every filament to extruder 1. The P1P is left out because Bambu Studio
+# 2.9 ships no PLA profile that lists it; P1P owners can pick the P1S (same
+# bed).
 PRINTERS = [
     ("bambu-lab-a1", "Bambu Lab A1"),
     ("bambu-lab-a1-mini", "Bambu Lab A1 mini"),
@@ -52,6 +54,7 @@ PRINTERS = [
     ("bambu-lab-x1-carbon", "Bambu Lab X1 Carbon"),
     ("bambu-lab-x1e", "Bambu Lab X1E"),
     ("bambu-lab-h2s", "Bambu Lab H2S"),
+    ("bambu-lab-h2c", "Bambu Lab H2C"),
 ]
 PROCESS_BASE = "0.20mm Standard"
 FILAMENTS = ["Bambu PLA Matte", "Bambu PLA Basic", "Bambu PETG Matte", "Bambu PETG HF", "Bambu PETG Basic",
@@ -167,6 +170,9 @@ def bed_of(machine: dict) -> dict:
         "printable_area": pts(machine.get("printable_area")),
         "bed_exclude_area": pts(machine.get("bed_exclude_area")),
         "printable_height": float(machine.get("printable_height", 250)),
+        "extruders": len(machine.get("nozzle_diameter") or ["0.4"]),
+        # what each nozzle of a multi-nozzle printer reaches ("0x0,325x0,...")
+        "extruder_printable_area": [pts(a.split(",")) for a in machine.get("extruder_printable_area") or []],
     }
 
 
@@ -183,8 +189,8 @@ def classify(n1: dict, n2: dict, n3: dict) -> dict:
             per_filament.append(k)
         elif lens == (3, 4, 5):
             bracketed.append(k)
-        elif lens == (1, 4, 9):
-            square.append(k)
+        elif lens[1] == 4 * lens[0] and lens[2] == 9 * lens[0]:
+            square.append(k)  # N x N, once per extruder
         else:
             other.append([k, list(lens)])
     if other:
@@ -220,9 +226,6 @@ def main() -> None:
                 machine = system_json(prof, "machine", machine_name)
             except FileNotFoundError:
                 print(f"skip {machine_name}: no such profile")
-                continue
-            if len(machine.get("nozzle_diameter", [])) != 1:
-                print(f"skip {machine_name}: more than one nozzle")
                 continue
             process_name = prof.compatible("process", PROCESS_BASE, machine_name)
             if not process_name:

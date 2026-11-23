@@ -174,6 +174,13 @@ def write_project(path: Path, *, bed: Bed, plates: list[PlateSpec], meshes: dict
     build = [f' <build p:UUID="{uuid.uuid4()}">\n']
     cfg = ['<?xml version="1.0" encoding="UTF-8"?>\n<config>\n']
     plate_xml = []
+    # which nozzle prints each filament: Bambu Studio's own choice, unless the
+    # settings map them by hand (a two-nozzle printer, printers.py), which
+    # every plate then says too
+    plate_map = '    <metadata key="filament_map_mode" value="Auto For Flush"/>\n'
+    if settings.get("filament_map_mode") == "Manual" and settings.get("filament_map"):
+        plate_map = ('    <metadata key="filament_map_mode" value="Manual"/>\n'
+                     f'    <metadata key="filament_maps" value="{" ".join(settings["filament_map"])}"/>\n')
 
     next_id = len(used) + 1
     identify = 1000
@@ -231,7 +238,7 @@ def write_project(path: Path, *, bed: Bed, plates: list[PlateSpec], meshes: dict
             f'    <metadata key="plater_id" value="{pi + 1}"/>\n'
             f'    <metadata key="plater_name" value={quoteattr(bambu_name(pl.name))}/>\n'
             '    <metadata key="locked" value="false"/>\n'
-            '    <metadata key="filament_map_mode" value="Auto For Flush"/>\n'
+            + plate_map +
             '    <metadata key="gcode_file" value=""/>\n'
             + "".join(instances) +
             '  </plate>\n'

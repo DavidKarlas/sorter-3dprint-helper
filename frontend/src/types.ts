@@ -44,6 +44,9 @@ export type Printer = {
 	/** plate types each filament can be printed on */
 	bed_types: Record<string, string[]>;
 	bed: { width: number; depth: number; height: number };
+	nozzles: number;
+	/** what this printer's projects do differently (a two-nozzle printer) */
+	note: string | null;
 	bambu_studio_version: string;
 };
 export type Alternative = { id: string; label: string; options: { id: string; label: string }[] };
