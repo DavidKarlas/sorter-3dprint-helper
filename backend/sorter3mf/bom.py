@@ -13,6 +13,9 @@ here prints the same counts the calculator lists:
 - colours resolved per section: role, fixed, split and by_section specs
   (`colorUnits` in src/lib/filament.ts).
 
+On top of the places, colours can be switched off ("print only what is black
+today"): a colour filter on the filament's own colours.
+
 When the calculator changes how it counts, change it here too.
 """
 
@@ -40,6 +43,9 @@ ALTERNATIVES = [
 ]
 
 DEFAULT_LAYERS = ["third", "third", "half"]
+
+# The colour id the colour filter uses for a part the catalog gives no colour.
+ANY_COLOR = "any"
 
 
 def variant_count(part_id: str, layers: list[str]) -> int | None:
@@ -69,6 +75,9 @@ class BuildConfig:
     role_colors: dict[str, str] = field(default_factory=dict)
     qty_overrides: dict[str, int] = field(default_factory=dict)
     engrave_ids: bool = True
+    # colours not to print: ids of the filament's palette (ANY_COLOR for a part
+    # with no colour); with no palette, catalog colour ids
+    excluded_colors: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -87,6 +96,9 @@ class BomLine:
     stl_url: str
     in_bins: bool
     uses: list[treemod.Use] = field(default_factory=list)  # every place, selected or not
+    # what the selected places need before the colour filter, so the filter
+    # can show what each colour holds, including the colours switched off
+    selected_units: list[ColorUnit] = field(default_factory=list)
 
     @property
     def id(self) -> str:
@@ -221,6 +233,18 @@ def _units_for(part: dict, section: str, count: int, roles: dict[str, str]) -> l
     return [ColorUnit(section, cid, count) for cid, _ in color_units(part, count, roles, section)]
 
 
+def _in_palette(units: list[ColorUnit], cat: Catalog, palette: "palettes.Palette | None") -> list[ColorUnit]:
+    """The units in the filament's colours; units that land on the same colour
+    in the same section are merged."""
+    if palette is None:
+        return units
+    merged: dict[tuple[str, str | None], int] = {}
+    for u in units:
+        cid = palettes.resolve(palette, cat, u.color_id).id if u.color_id else None
+        merged[(u.section, cid)] = merged.get((u.section, cid), 0) + u.count
+    return [ColorUnit(sec, cid, n) for (sec, cid), n in merged.items()]
+
+
 def default_excluded(cat: Catalog, layers: list[str] | None = None) -> list[str]:
     """Leaves holding only bins: off unless asked for, like the calculator's
     "Print bins" toggle. The tree's shape does not depend on the layers (a
@@ -244,6 +268,7 @@ def build_bom(cat: Catalog, cfg: BuildConfig, palette: "palettes.Palette | None"
     order = {s["id"]: i for i, s in enumerate(cat.sections)}
     quantities = _apply_alternatives(cat, cfg.alternatives or {})
     excluded = set(cfg.excluded if cfg.excluded is not None else default_excluded(cat, layers))
+    colors_off = set(cfg.excluded_colors or [])
 
     root, raw = treemod.walk(cat, layers, _forced_optional(cfg.alternatives or {}))
     leaf_for = treemod.leaf_of(root)
@@ -268,28 +293,30 @@ def build_bom(cat: Catalog, cfg: BuildConfig, palette: "palettes.Palette | None"
         for u in uses:
             if not treemod.is_excluded(u.leaf, excluded):
                 per_section[u.section] = per_section.get(u.section, 0) + u.count
-        units = [cu for sec, n in sorted(per_section.items(), key=lambda x: order.get(x[0], 99))
-                 for cu in _units_for(part, sec, n, roles)]
+        selected = _in_palette([cu for sec, n in sorted(per_section.items(), key=lambda x: order.get(x[0], 99))
+                                for cu in _units_for(part, sec, n, roles)], cat, palette)
+        selected = [u for u in selected if u.count > 0]
+        units = [u for u in selected if (u.color_id or ANY_COLOR) not in colors_off]
         needed = sum(u.count for u in units)
 
         qty = needed
         if pid in (cfg.qty_overrides or {}):
             qty = max(0, int(cfg.qty_overrides[pid]))
         if qty != needed:
-            if not units:  # printing a part no selected place needs: take the colour of its first section
+            # A count asked for by hand is printed even when the filter would
+            # leave the part out: in the selected places' colours, or else
+            # the colour of its first section.
+            if not units:
+                units = selected
+            if not units:
                 first = counts[0][0] if counts else next(iter(q))
-                units = _units_for(part, first, 0, roles)
+                units = _in_palette(_units_for(part, first, 0, roles), cat, palette)
             counts_ = apportion([u.count for u in units], qty)
             units = [ColorUnit(u.section, u.color_id, n) for u, n in zip(units, counts_)]
         units = [u for u in units if u.count > 0]
-        if palette is not None:
-            merged: dict[tuple[str, str | None], int] = {}
-            for u in units:
-                cid = palettes.resolve(palette, cat, u.color_id).id if u.color_id else None
-                merged[(u.section, cid)] = merged.get((u.section, cid), 0) + u.count
-            units = [ColorUnit(sec, cid, n) for (sec, cid), n in merged.items()]
         lines.append(BomLine(part=part, needed=needed, qty=qty, units=units,
-                             stl_url=part_stl(part, cfg.engrave_ids), in_bins=in_bins, uses=uses))
+                             stl_url=part_stl(part, cfg.engrave_ids), in_bins=in_bins, uses=uses,
+                             selected_units=selected))
     lines.sort(key=lambda l: (min((order.get(s, 99) for s in l.part["quantities"]), default=99), l.part["name"]))
     return lines
 

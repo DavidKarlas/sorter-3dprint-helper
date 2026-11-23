@@ -695,6 +695,66 @@ table.parts {
 	color: var(--warning-ink);
 }
 
+/* ---- what to print: the colour filter ---- */
+.color-filter {
+	margin: 0 0 12px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--line);
+}
+.color-filter-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 8px;
+}
+.color-filter-label {
+	font-weight: 500;
+	margin-right: auto;
+}
+.color-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.color-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 28px;
+	padding: 0 8px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--r);
+	background: var(--field);
+	color: var(--ink);
+	font: inherit;
+	font-size: 13px;
+	cursor: pointer;
+}
+.color-chip:hover {
+	background: var(--hover);
+}
+.color-chip[aria-pressed='true'] {
+	background: var(--primary-soft);
+	border-color: var(--primary);
+}
+.color-chip[aria-pressed='false'] {
+	color: var(--ink-faint);
+	border-style: dashed;
+}
+.color-chip[aria-pressed='false'] .color-chip-name {
+	text-decoration: line-through;
+}
+.color-chip[aria-pressed='false'] .swatch {
+	opacity: 0.35;
+}
+.color-chip-count {
+	color: var(--ink-muted);
+	font-variant-numeric: tabular-nums;
+}
+.color-filter .panel-note {
+	margin: 8px 0 0;
+}
+
 /* ---- what to print: the assembly tree ---- */
 .ink {
 	color: var(--ink);

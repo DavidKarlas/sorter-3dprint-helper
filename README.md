@@ -7,8 +7,9 @@ filament and print settings already chosen.
 
 You pick the machine (layers and bin sizes, Orange Pi housing, optional
 parts), which parts of it to print (any branch of the assembly tree: the
-feeder, C-channel 2, the bins, the PSU housing...), the colours, and the
-printer and print settings. The
+feeder, C-channel 2, the bins, the PSU housing...), the colours (and which
+of them to print now, say only the black parts), and the printer and print
+settings. The
 app works out what to print the same way the
 [parts calculator](https://parts-calculator.basically.website/) does, and
 writes one `.3mf` (or a few, see below) that loads straight into Bambu Studio.
@@ -117,7 +118,9 @@ volumes:
    the camera lamp of C-channel 3, a distribution layer...). Those places are
    the checkboxes. Copies the tree cannot place land in a "not in the
    assembly tree yet" group, so nothing goes missing. Bins start unticked, as
-   in the calculator.
+   in the calculator. A colour filter under the tree leaves out the pieces of
+   the colours switched off, in the filament's own colours (after the
+   palette move below), so "only Black" means the pieces printed in Black.
 4. **Parts** (`parts.py`) are downloaded from the asset service. The URLs are
    content-addressed, so every download is checked against the hash in its
    name and cached for good. Parts the catalog says are not exported in their
@@ -172,7 +175,8 @@ Studio's own colour table (`profiles/_colors.json`, written by the same
 tool). PLA Matte is the catalog's palette. When you switch filament, every
 colour choice moves to the nearest colour in the new palette, and so do the
 catalog's fixed colours: Charcoal becomes PETG Matte Black, and the gray
-rotors and stators stay gray. The plate types offered are the ones the
+rotors and stators stay gray. The colour filter moves with them; where two
+colours land on one, it stays off only if both were off. The plate types offered are the ones the
 filament's profile has a bed temperature for (PETG Matte: no Cool Plate;
 PLA Matte: no Engineering Plate). Gram figures come from the catalog's PLA
 Matte slices, scaled by the filament's density.

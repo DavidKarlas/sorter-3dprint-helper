@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
 from . import config, jobs
-from .bom import (ALTERNATIVES, DEFAULT_LAYERS, BuildConfig, build_bom, default_excluded,
+from .bom import (ALTERNATIVES, ANY_COLOR, DEFAULT_LAYERS, BuildConfig, build_bom, default_excluded,
                   default_role_colors, required_color, selection_tree)
 from .build import BED_TYPES, BRIMS, INFILL_PATTERNS, RECOMMENDED, PrintOptions, bed_types_for, grams_factor
 from .catalog import load_catalog
@@ -41,6 +41,9 @@ class BuildRequest(BaseModel):
     role_colors: dict[str, str] = Field(default_factory=dict)
     qty_overrides: dict[str, int] = Field(default_factory=dict)
     engrave_ids: bool = True
+    # colours not to print: ids of the filament's palette ("any" for a part
+    # with no colour); see /api/bom "colors"
+    excluded_colors: list[str] = Field(default_factory=list, max_length=500)
     # the printer and print settings
     printer: str = "bambu-lab-a1"
     filament: str = "Bambu PLA Matte"
@@ -85,7 +88,7 @@ class BuildRequest(BaseModel):
                           excluded=list(self.excluded) if self.excluded is not None else None,
                           include_optional=self.include_optional, alternatives=dict(self.alternatives),
                           role_colors=dict(self.role_colors), qty_overrides=dict(self.qty_overrides),
-                          engrave_ids=self.engrave_ids)
+                          engrave_ids=self.engrave_ids, excluded_colors=list(self.excluded_colors))
         opts = PrintOptions(printer=self.printer, filament=self.filament, bed_type=self.bed_type,
                             layer_height=self.layer_height, infill_density=self.infill_density,
                             infill_pattern=self.infill_pattern, wall_loops=self.wall_loops,
@@ -187,10 +190,18 @@ def bom(req: BuildRequest) -> dict:
             "render": p.get("render"), "stl_url": l.stl_url,
         })
     printed = [l for l in lines if l.qty > 0]
+    # pieces per colour in the ticked places, before the colour filter, so the
+    # colours switched off still show what they hold
+    per_color: dict[str, int] = {}
+    for l in lines:
+        for u in l.selected_units:
+            cid = u.color_id or ANY_COLOR
+            per_color[cid] = per_color.get(cid, 0) + u.count
     return {
         "palette": palette.id,
         "grams_factor": round(gf, 4),
         "tree": selection_tree(cat, cfg, lines),
+        "colors": [{"id": cid, "count": n} for cid, n in sorted(per_color.items(), key=lambda x: (-x[1], x[0]))],
         "lines": out,
         "totals": {
             "part_types": len(printed),

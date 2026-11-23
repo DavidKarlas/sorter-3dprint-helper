@@ -40,21 +40,48 @@ export function nearest(palette: Color[], hex: string): Color | undefined {
 	return best;
 }
 
-/** The hex of a colour id from any palette the server knows. */
-function hexOf(options: Options, id: string, prefer: Color[]): string | undefined {
+/** The colour id the colour filter uses for a part with no colour. */
+export const ANY_COLOR = 'any';
+
+/** A colour id from any palette the server knows, `prefer` first. */
+export function findColor(options: Options, id: string, prefer: Color[]): Color | undefined {
 	return (
-		prefer.find((c) => c.id === id)?.hex ??
-		options.colors.find((c) => c.id === id)?.hex ??
+		prefer.find((c) => c.id === id) ??
+		options.colors.find((c) => c.id === id) ??
 		Object.values(options.palettes)
 			.flat()
-			.find((c) => c.id === id)?.hex
+			.find((c) => c.id === id)
 	);
+}
+
+function hexOf(options: Options, id: string, prefer: Color[]): string | undefined {
+	return findColor(options, id, prefer)?.hex;
+}
+
+/** The colour filter carried to a new palette. Colours that were apart can
+ *  land on one colour; that colour stays off only when every colour in use
+ *  that moved onto it was off, so "only black" stays "only black". */
+function moveFilter(excluded: string[], used: string[], options: Options, from: Color[], to: Color[]): string[] {
+	const target = (id: string) => {
+		if (id === ANY_COLOR) return id;
+		const hex = hexOf(options, id, from);
+		return hex ? nearest(to, hex)?.id : undefined;
+	};
+	const off = new Set(excluded);
+	const stayOff = new Set<string>();
+	const turnOn = new Set<string>();
+	for (const id of used) {
+		const t = target(id);
+		if (t) (off.has(id) ? stayOff : turnOn).add(t);
+	}
+	return [...stayOff].filter((t) => !turnOn.has(t)).sort();
 }
 
 /** Settings made consistent with the options after a change: the filament
  *  exists for the printer, the plate type suits the filament, and every colour
- *  choice is a colour of the filament's palette (moved to the nearest one). */
-export function adjust(next: Settings, options: Options, prev?: Settings): Settings {
+ *  choice is a colour of the filament's palette (moved to the nearest one).
+ *  `used` are the colours the parts list had before the change. */
+export function adjust(next: Settings, options: Options, prev?: Settings, used?: string[]): Settings {
 	const printer = options.printers.find((p) => p.id === next.printer) ?? options.printers[0];
 	const filament = printer.filaments.includes(next.filament) ? next.filament : printer.filaments[0];
 	const beds = printer.bed_types[filament] ?? options.bed_types;
@@ -72,5 +99,11 @@ export function adjust(next: Settings, options: Options, prev?: Settings): Setti
 		const hex = hexOf(options, id, before) ?? hexOf(options, role.default, before);
 		role_colors[role.id] = (hex && nearest(palette, hex)?.id) || palette[0]?.id || id;
 	}
-	return { ...next, printer: printer.id, filament, bed_type, role_colors };
+
+	const excluded = Array.isArray(next.excluded_colors) ? next.excluded_colors : [];
+	const excluded_colors =
+		before === palette
+			? excluded.filter((id) => id === ANY_COLOR || palette.some((c) => c.id === id))
+			: moveFilter(excluded, used ?? excluded, options, before, palette);
+	return { ...next, printer: printer.id, filament, bed_type, role_colors, excluded_colors };
 }

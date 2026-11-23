@@ -11,6 +11,8 @@ export type Settings = {
 	role_colors: Record<string, string>;
 	qty_overrides: Record<string, number>;
 	engrave_ids: boolean;
+	/** colours not to print: ids of the filament's palette ("any" for a part with no colour) */
+	excluded_colors: string[];
 	printer: string;
 	filament: string;
 	bed_type: string;
@@ -98,6 +100,8 @@ export type Bom = {
 	/** catalog grams are PLA Matte slices; this is the density ratio applied */
 	grams_factor: number;
 	tree: TreeNode;
+	/** pieces per colour in the ticked places, before the colour filter, most first */
+	colors: { id: string; count: number }[];
 	lines: BomLine[];
 	totals: { part_types: number; pieces: number; grams: number; seconds: number };
 };

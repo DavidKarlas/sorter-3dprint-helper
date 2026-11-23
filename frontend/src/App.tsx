@@ -33,7 +33,8 @@ function loadSaved(defaults: Settings): Settings {
 			...defaults,
 			...saved,
 			role_colors: { ...defaults.role_colors, ...(saved.role_colors ?? {}) },
-			excluded: Array.isArray(saved.excluded) ? saved.excluded : defaults.excluded
+			excluded: Array.isArray(saved.excluded) ? saved.excluded : defaults.excluded,
+			excluded_colors: Array.isArray(saved.excluded_colors) ? saved.excluded_colors : defaults.excluded_colors
 		};
 	} catch {
 		return defaults;
@@ -63,6 +64,11 @@ export default function App() {
 	const [jobSettings, setJobSettings] = useState<string | null>(null);
 	const [buildError, setBuildError] = useState<string | null>(null);
 	const poll = useRef<number | null>(null);
+	// the colours in the parts list, to carry the colour filter to a new palette
+	const usedColors = useRef<string[] | undefined>(undefined);
+	useEffect(() => {
+		usedColors.current = bom?.colors.map((c) => c.id);
+	}, [bom]);
 
 	useEffect(() => {
 		getOptions()
@@ -101,7 +107,7 @@ export default function App() {
 	// every change goes through adjust(): a new filament moves the colours to
 	// its palette and the plate type to one it can print on
 	const update = useCallback(
-		(patch: Partial<Settings>) => setSettings((s) => (s && options ? adjust({ ...s, ...patch }, options, s) : s)),
+		(patch: Partial<Settings>) => setSettings((s) => (s && options ? adjust({ ...s, ...patch }, options, s, usedColors.current) : s)),
 		[options]
 	);
 

@@ -130,6 +130,23 @@ def test_colours_split_fixed_and_by_section():
     assert {u.color_id for u in b["stator"].units} == {"ash-gray"}
 
 
+def test_colour_filter_leaves_out_switched_off_colours():
+    nema = part("nema", {"feeder": 3}, {"split": [{"color": "charcoal", "qty": 1}, {"color": "ash-gray", "qty": 2}]})
+    gear = part("gear", {"feeder": 4})  # frame role: charcoal
+    stator = part("stator", {"feeder": 2}, {"fixed": "ash-gray"})
+    cat = catalog([nema, gear, stator])
+    b = by_id(build_bom(cat, BuildConfig(excluded_colors=["ash-gray"])))
+    assert b["nema"].needed == b["nema"].qty == 1
+    assert {u.color_id for u in b["nema"].units} == {"charcoal"}
+    assert b["gear"].qty == 4
+    assert b["stator"].needed == b["stator"].qty == 0 and not b["stator"].units
+    # what the colour held is still known, for the filter's counts
+    assert sum(u.count for u in b["stator"].selected_units) == 2
+    # a count asked for by hand is printed in the part's own colour
+    b = by_id(build_bom(cat, BuildConfig(excluded_colors=["ash-gray"], qty_overrides={"stator": 1})))
+    assert b["stator"].qty == 1 and [(u.color_id, u.count) for u in b["stator"].units] == [("ash-gray", 1)]
+
+
 def test_alternative_swaps_parts():
     parts = [part("opi-wall", {"electronics": 1}), part("opi-pro-wall", {})]
     asms = [

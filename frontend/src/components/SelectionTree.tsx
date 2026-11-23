@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { ANY_COLOR, findColor, paletteFor } from '../palette';
 import type { Bom, Options, Settings, TreeNode } from '../types';
-import { Panel } from './controls';
+import { Panel, Swatch } from './controls';
 
 type Props = {
 	bom: Bom | null;
@@ -71,6 +72,7 @@ export function SelectionTree({ bom, options, settings, update }: Props) {
 					</>
 				) : null}
 			</p>
+			{bom ? <ColorFilter bom={bom} options={options} settings={settings} update={update} /> : null}
 			{!root ? (
 				<p className="panel-note">Loading…</p>
 			) : (
@@ -81,6 +83,63 @@ export function SelectionTree({ bom, options, settings, update }: Props) {
 				</ul>
 			)}
 		</Panel>
+	);
+}
+
+/** The colours the ticked places use, each one switched on or off: print
+ *  only what is black today. Counts are pieces before the filter. */
+function ColorFilter({ bom, options, settings, update }: Props & { bom: Bom }) {
+	const used = bom.colors;
+	if (!used.length) return null;
+	const palette = paletteFor(options, settings.filament);
+	const off = new Set(settings.excluded_colors);
+	const set = (ids: Iterable<string>) => update({ excluded_colors: [...new Set(ids)].sort() });
+	const toggle = (id: string) => {
+		const next = new Set(off);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		set(next);
+	};
+	const all = used.reduce((n, c) => n + c.count, 0);
+	const printed = used.reduce((n, c) => n + (off.has(c.id) ? 0 : c.count), 0);
+	return (
+		<div className="color-filter" role="group" aria-label="Colours to print">
+			<div className="color-filter-head">
+				<span className="color-filter-label">Colours</span>
+				<button type="button" className="link-button" onClick={() => set([])}>
+					All
+				</button>
+				<button type="button" className="link-button" onClick={() => set(used.map((c) => c.id))}>
+					None
+				</button>
+			</div>
+			<div className="color-chips">
+				{used.map(({ id, count }) => {
+					const c = id === ANY_COLOR ? undefined : findColor(options, id, palette);
+					const name = c?.name ?? (id === ANY_COLOR ? 'Any colour' : id);
+					const on = !off.has(id);
+					return (
+						<button
+							key={id}
+							type="button"
+							className="color-chip"
+							aria-pressed={on}
+							title={`${name}: ${count} pieces. ${on ? 'Click to leave them out.' : 'Click to print them.'}`}
+							onClick={() => toggle(id)}
+						>
+							<Swatch hex={c?.hex ?? '#999999'} size={12} />
+							<span className="color-chip-name">{name}</span>
+							<span className="color-chip-count">{count}</span>
+						</button>
+					);
+				})}
+			</div>
+			{printed < all ? (
+				<p className="panel-note">
+					Printing <b className="ink">{printed}</b> of {all} pieces: only the colours switched on.
+				</p>
+			) : null}
+		</div>
 	);
 }
 
