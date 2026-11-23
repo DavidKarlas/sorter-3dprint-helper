@@ -44,6 +44,8 @@ class BuildRequest(BaseModel):
     # colours not to print: ids of the filament's palette ("any" for a part
     # with no colour); see /api/bom "colors"
     excluded_colors: list[str] = Field(default_factory=list, max_length=500)
+    # pieces already printed: part id -> colour id (as above) -> count
+    printed: dict[str, dict[str, int]] = Field(default_factory=dict, max_length=5000)
     # the printer and print settings
     printer: str = "bambu-lab-a1"
     filament: str = "Bambu PLA Matte"
@@ -69,6 +71,14 @@ class BuildRequest(BaseModel):
                 raise ValueError(f"quantity for {k} must be 0..1000")
         return v
 
+    @field_validator("printed")
+    @classmethod
+    def _printed(cls, v: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
+        for k, per in v.items():
+            if len(per) > 100 or any(n < 0 or n > 10000 for n in per.values()):
+                raise ValueError(f"printed counts for {k} must be 0..10000")
+        return v
+
     @field_validator("bed_type")
     @classmethod
     def _bed(cls, v: str) -> str:
@@ -88,7 +98,8 @@ class BuildRequest(BaseModel):
                           excluded=list(self.excluded) if self.excluded is not None else None,
                           include_optional=self.include_optional, alternatives=dict(self.alternatives),
                           role_colors=dict(self.role_colors), qty_overrides=dict(self.qty_overrides),
-                          engrave_ids=self.engrave_ids, excluded_colors=list(self.excluded_colors))
+                          engrave_ids=self.engrave_ids, excluded_colors=list(self.excluded_colors),
+                          printed={k: dict(v) for k, v in self.printed.items()})
         opts = PrintOptions(printer=self.printer, filament=self.filament, bed_type=self.bed_type,
                             layer_height=self.layer_height, infill_density=self.infill_density,
                             infill_pattern=self.infill_pattern, wall_loops=self.wall_loops,
@@ -180,6 +191,9 @@ def bom(req: BuildRequest) -> dict:
             "id": l.id, "name": p["name"], "uid": p.get("uid"), "needed": l.needed, "qty": l.qty,
             "sections": list(p["quantities"]),
             "units": [{"section": u.section, "color_id": u.color_id, "count": u.count} for u in l.units],
+            # what is left after the pieces already printed, and how many those were
+            "left": [{"section": u.section, "color_id": u.color_id, "count": u.count} for u in l.left],
+            "to_print": l.to_print, "printed": sum(l.printed.values()),
             "grams": round(p["grams"] * gf, 2) if p.get("grams") is not None else None,
             "print_seconds": p.get("print_seconds"),
             "optional": bool(p.get("optional")), "in_bins": l.in_bins,
@@ -189,9 +203,9 @@ def bom(req: BuildRequest) -> dict:
             "low_tolerance": bool(p.get("low_tolerance")),
             "render": p.get("render"), "stl_url": l.stl_url,
         })
-    printed = [l for l in lines if l.qty > 0]
-    # pieces per colour in the ticked places, before the colour filter, so the
-    # colours switched off still show what they hold
+    printing = [l for l in lines if l.to_print > 0]
+    # pieces per colour the ticked places still need, before the colour
+    # filter, so the colours switched off still show what they hold
     per_color: dict[str, int] = {}
     for l in lines:
         for u in l.selected_units:
@@ -204,10 +218,12 @@ def bom(req: BuildRequest) -> dict:
         "colors": [{"id": cid, "count": n} for cid, n in sorted(per_color.items(), key=lambda x: (-x[1], x[0]))],
         "lines": out,
         "totals": {
-            "part_types": len(printed),
-            "pieces": sum(l.qty for l in printed),
-            "grams": round(sum(l.qty * (l.part.get("grams") or 0) for l in printed) * gf, 1),
-            "seconds": sum(l.qty * (l.part.get("print_seconds") or 0) for l in printed),
+            "part_types": len(printing),
+            "pieces": sum(l.to_print for l in printing),
+            "grams": round(sum(l.to_print * (l.part.get("grams") or 0) for l in printing) * gf, 1),
+            "seconds": sum(l.to_print * (l.part.get("print_seconds") or 0) for l in printing),
+            # pieces already printed, of what this machine needs
+            "printed": sum(sum(l.printed.values()) for l in lines),
         },
     }
 

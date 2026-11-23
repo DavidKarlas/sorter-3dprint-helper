@@ -14,7 +14,8 @@ here prints the same counts the calculator lists:
   (`colorUnits` in src/lib/filament.ts).
 
 On top of the places, colours can be switched off ("print only what is black
-today"): a colour filter on the filament's own colours.
+today"): a colour filter on the filament's own colours. Pieces already
+printed, counted per part and colour, are left out of what is still to print.
 
 When the calculator changes how it counts, change it here too.
 """
@@ -78,6 +79,8 @@ class BuildConfig:
     # colours not to print: ids of the filament's palette (ANY_COLOR for a part
     # with no colour); with no palette, catalog colour ids
     excluded_colors: list[str] = field(default_factory=list)
+    # pieces already printed: part id -> colour id (as above) -> count
+    printed: dict[str, dict[str, int]] = field(default_factory=dict)
 
 
 @dataclass
@@ -96,13 +99,22 @@ class BomLine:
     stl_url: str
     in_bins: bool
     uses: list[treemod.Use] = field(default_factory=list)  # every place, selected or not
-    # what the selected places need before the colour filter, so the filter
-    # can show what each colour holds, including the colours switched off
+    # what the selected places still need (less what is printed) before the
+    # colour filter, so the filter can show what each colour holds, including
+    # the colours switched off
     selected_units: list[ColorUnit] = field(default_factory=list)
+    # `units` less the pieces already printed: what a build prints
+    left: list[ColorUnit] = field(default_factory=list)
+    # pieces already printed, per colour, as far as `units` needs them
+    printed: dict[str, int] = field(default_factory=dict)
 
     @property
     def id(self) -> str:
         return self.part["id"]
+
+    @property
+    def to_print(self) -> int:
+        return sum(u.count for u in self.left)
 
 
 def _forced_optional(chosen: dict[str, str]) -> dict[str, bool]:
@@ -245,6 +257,23 @@ def _in_palette(units: list[ColorUnit], cat: Catalog, palette: "palettes.Palette
     return [ColorUnit(sec, cid, n) for (sec, cid), n in merged.items()]
 
 
+def _less_printed(units: list[ColorUnit], printed: dict[str, int]) -> tuple[list[ColorUnit], dict[str, int]]:
+    """`units` less the pieces already printed in each colour (taken from the
+    first sections first), and how many of those printed pieces were used."""
+    rest = {k: max(0, int(n)) for k, n in (printed or {}).items()}
+    left: list[ColorUnit] = []
+    used: dict[str, int] = {}
+    for u in units:
+        key = u.color_id or ANY_COLOR
+        take = min(u.count, rest.get(key, 0))
+        if take:
+            rest[key] -= take
+            used[key] = used.get(key, 0) + take
+        if u.count > take:
+            left.append(ColorUnit(u.section, u.color_id, u.count - take))
+    return left, used
+
+
 def default_excluded(cat: Catalog, layers: list[str] | None = None) -> list[str]:
     """Leaves holding only bins: off unless asked for, like the calculator's
     "Print bins" toggle. The tree's shape does not depend on the layers (a
@@ -314,9 +343,11 @@ def build_bom(cat: Catalog, cfg: BuildConfig, palette: "palettes.Palette | None"
             counts_ = apportion([u.count for u in units], qty)
             units = [ColorUnit(u.section, u.color_id, n) for u, n in zip(units, counts_)]
         units = [u for u in units if u.count > 0]
+        done = (cfg.printed or {}).get(pid) or {}
+        left, used = _less_printed(units, done)
         lines.append(BomLine(part=part, needed=needed, qty=qty, units=units,
                              stl_url=part_stl(part, cfg.engrave_ids), in_bins=in_bins, uses=uses,
-                             selected_units=selected))
+                             selected_units=_less_printed(selected, done)[0], left=left, printed=used))
     lines.sort(key=lambda l: (min((order.get(s, 99) for s in l.part["quantities"]), default=99), l.part["name"]))
     return lines
 

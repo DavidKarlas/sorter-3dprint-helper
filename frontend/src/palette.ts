@@ -77,6 +77,25 @@ function moveFilter(excluded: string[], used: string[], options: Options, from: 
 	return [...stayOff].filter((t) => !turnOn.has(t)).sort();
 }
 
+/** Printed counts in the new palette's colours: a piece printed in Charcoal
+ *  counts for the part that is now Black. */
+function movePrinted(printed: Settings['printed'], options: Options, from: Color[], to: Color[]): Settings['printed'] {
+	const out: Settings['printed'] = {};
+	for (const [part, per] of Object.entries(printed ?? {})) {
+		const moved: Record<string, number> = {};
+		for (const [id, n] of Object.entries(per)) {
+			let t = id;
+			if (id !== ANY_COLOR && !to.some((c) => c.id === id)) {
+				const hex = hexOf(options, id, from);
+				t = (hex && nearest(to, hex)?.id) || id;
+			}
+			if (n > 0) moved[t] = (moved[t] ?? 0) + n;
+		}
+		if (Object.keys(moved).length) out[part] = moved;
+	}
+	return out;
+}
+
 /** Settings made consistent with the options after a change: the filament
  *  exists for the printer, the plate type suits the filament, and every colour
  *  choice is a colour of the filament's palette (moved to the nearest one).
@@ -105,5 +124,6 @@ export function adjust(next: Settings, options: Options, prev?: Settings, used?:
 		before === palette
 			? excluded.filter((id) => id === ANY_COLOR || palette.some((c) => c.id === id))
 			: moveFilter(excluded, used ?? excluded, options, before, palette);
-	return { ...next, printer: printer.id, filament, bed_type, role_colors, excluded_colors };
+	const printed = movePrinted(next.printed, options, before, palette);
+	return { ...next, printer: printer.id, filament, bed_type, role_colors, excluded_colors, printed };
 }

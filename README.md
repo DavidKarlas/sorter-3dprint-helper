@@ -185,6 +185,16 @@ Supported: A1, A1 mini, P1S, P2S, X1 Carbon, X1E, H2S. Bambu Studio 2.9 ships
 no PLA profile for the P1P, so it is left out (use the P1S, same bed).
 Two-nozzle printers (H2D) are not supported yet.
 
+### What is already printed
+
+The parts list has a **Printed** column: how many pieces of each part are
+done (per colour, for a part that comes in more than one). The ✓ marks a part
+fully printed. A build prints only what is left, and the totals count only
+that. Printed counts move with the colours when you switch filament: a piece
+printed in Charcoal counts for the part that is now PETG Black. A count in a
+colour the part no longer uses (you changed a role colour) does not count,
+and stays visible so you can clear it.
+
 ### Checking output with Bambu Studio
 
 ```bash
@@ -214,6 +224,8 @@ slicing in CI.
   prints faster than the sum.
 - Purge volumes between colours are an estimate. Bambu Studio recalculates
   them when you change a colour. With one colour per plate they are not used.
+- What is printed is kept in the browser (with the other settings), so it
+  does not follow you to another browser or computer.
 - The project declares itself a Bambu Studio project (the `Application`
   metadata) so Bambu Studio loads its plates and settings. An older Bambu
   Studio may warn that the file comes from a newer version.

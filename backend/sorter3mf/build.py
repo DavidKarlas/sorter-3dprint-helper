@@ -184,7 +184,7 @@ def _safe(name: str) -> str:
 
 def prepare_parts(lines: list[BomLine], progress: Progress) -> tuple[dict[str, PreparedPart], list[str]]:
     """Download (or reuse) and pose every STL the BOM prints."""
-    wanted = {l.id: l for l in lines if l.qty > 0}
+    wanted = {l.id: l for l in lines if l.to_print > 0}
     out: dict[str, PreparedPart] = {}
     errors: list[str] = []
     total = len(wanted) or 1
@@ -220,7 +220,7 @@ def plan_plates(cat: Catalog, lines: list[BomLine], prepared: dict[str, Prepared
     groups: dict[tuple, list[PackItem]] = {}
     for l in lines:
         pp = prepared.get(l.id)
-        if pp is None or l.qty <= 0:
+        if pp is None or l.to_print <= 0:
             continue
         if pp.height > bed.height:
             warnings.append(f"{l.part['name']} is {pp.height:.0f} mm tall, taller than the "
@@ -229,7 +229,7 @@ def plan_plates(cat: Catalog, lines: list[BomLine], prepared: dict[str, Prepared
         if clear is None:
             clear = 20.0 if opts.supports == "tree" else 8.0
         pad = 2 * clear if support_settings(l.part, opts, cat) else 0.0
-        for u in l.units:
+        for u in l.left:
             key = (u.section, u.color_id) if opts.group_by == "section" else (None, u.color_id)
             for _ in range(u.count):
                 groups.setdefault(key, []).append(PackItem((l, u), pp.width + pad, pp.depth + pad))
@@ -324,8 +324,8 @@ def run_build(cat: Catalog, cfg: BuildConfig, opts: PrintOptions, out_dir: Path,
     progress("bom", 0.0, "Working out what to print")
     palette = palette_for(cat, opts.filament)
     lines = build_bom(cat, cfg, palette)
-    if not any(l.qty > 0 for l in lines):
-        raise ValueError("Nothing to print: every part is switched off.")
+    if not any(l.to_print > 0 for l in lines):
+        raise ValueError("Nothing to print: every part is switched off or already printed.")
 
     prepared, errors = prepare_parts(lines, progress)
     progress("pack", 0.0, "Arranging plates")

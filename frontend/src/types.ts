@@ -13,6 +13,8 @@ export type Settings = {
 	engrave_ids: boolean;
 	/** colours not to print: ids of the filament's palette ("any" for a part with no colour) */
 	excluded_colors: string[];
+	/** pieces already printed: part id -> colour id (as above) -> count */
+	printed: Record<string, Record<string, number>>;
 	printer: string;
 	filament: string;
 	bed_type: string;
@@ -74,6 +76,11 @@ export type BomLine = {
 	qty: number;
 	sections: string[];
 	units: BomUnit[];
+	/** units less the pieces already printed: what a build prints */
+	left: BomUnit[];
+	to_print: number;
+	/** pieces already printed, as far as this line needs them */
+	printed: number;
 	grams: number | null;
 	print_seconds: number | null;
 	optional: boolean;
@@ -103,7 +110,8 @@ export type Bom = {
 	/** pieces per colour in the ticked places, before the colour filter, most first */
 	colors: { id: string; count: number }[];
 	lines: BomLine[];
-	totals: { part_types: number; pieces: number; grams: number; seconds: number };
+	/** what is still to print; `printed` is what is done already */
+	totals: { part_types: number; pieces: number; grams: number; seconds: number; printed: number };
 };
 
 export type PlacedPiece = { part_id: string; name: string; x: number; y: number; rotation: number; w: number; d: number };

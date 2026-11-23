@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { grams } from '../format';
 import type { Bom, BomLine, Options, Settings } from '../types';
-import { paletteFor } from '../palette';
+import { ANY_COLOR, paletteFor } from '../palette';
 import { NumberField, Panel, Swatch } from './controls';
 
 type Props = {
@@ -11,9 +11,20 @@ type Props = {
 	update: (patch: Partial<Settings>) => void;
 };
 
+/** Pieces a line needs, per colour. */
+function needByColor(l: BomLine): Record<string, number> {
+	const out: Record<string, number> = {};
+	for (const u of l.units) {
+		const id = u.color_id ?? ANY_COLOR;
+		out[id] = (out[id] ?? 0) + u.count;
+	}
+	return out;
+}
+
 export function PartsTable({ bom, options, settings, update }: Props) {
 	const [filter, setFilter] = useState('');
 	const [showAll, setShowAll] = useState(false);
+	const [hideDone, setHideDone] = useState(false);
 	const palette = paletteFor(options, settings.filament);
 	const colors = useMemo(() => new Map(palette.map((c) => [c.id, c])), [palette]);
 	const sections = useMemo(() => new Map(options.sections.map((s) => [s.id, s.name])), [options.sections]);
@@ -26,11 +37,32 @@ export function PartsTable({ bom, options, settings, update }: Props) {
 		update({ qty_overrides: next });
 	};
 
+	const setPrinted = (line: BomLine, colorId: string, n: number | null) => {
+		const next = { ...settings.printed };
+		const per = { ...(next[line.id] ?? {}) };
+		if (!n) delete per[colorId];
+		else per[colorId] = n;
+		if (Object.keys(per).length) next[line.id] = per;
+		else delete next[line.id];
+		update({ printed: next });
+	};
+	// the ✓: every piece this line needs is printed, or none is
+	const toggleDone = (line: BomLine, done: boolean) => {
+		const next = { ...settings.printed };
+		if (done) delete next[line.id];
+		else next[line.id] = needByColor(line);
+		update({ printed: next });
+	};
+	const printedParts = Object.keys(settings.printed).length;
+	const isDone = (l: BomLine) => l.qty > 0 && l.to_print === 0;
+
 	// a part nothing selected needs, and nobody asked for by hand, is hidden unless asked
 	const relevant = (l: BomLine) => l.qty > 0 || l.needed > 0 || settings.qty_overrides[l.id] !== undefined;
 	const hidden = (bom?.lines ?? []).filter((l) => !relevant(l)).length;
+	const doneCount = (bom?.lines ?? []).filter(isDone).length;
 	const lines = (bom?.lines ?? []).filter((l) => {
 		if (!showAll && !relevant(l)) return false;
+		if (hideDone && isDone(l)) return false;
 		const q = filter.trim().toLowerCase();
 		return !q || l.name.toLowerCase().includes(q) || l.id.includes(q) || (l.uid ?? '').toLowerCase().includes(q);
 	});
@@ -46,9 +78,26 @@ export function PartsTable({ bom, options, settings, update }: Props) {
 							<span>Show {hidden} not selected</span>
 						</label>
 					) : null}
+					{doneCount ? (
+						<label className="toggle small">
+							<input type="checkbox" checked={hideDone} onChange={(e) => setHideDone(e.target.checked)} />
+							<span>Hide {doneCount} printed</span>
+						</label>
+					) : null}
 					{edited ? (
 						<button type="button" className="link-button" onClick={() => update({ qty_overrides: {} })}>
 							Reset {edited} edited
+						</button>
+					) : null}
+					{printedParts ? (
+						<button
+							type="button"
+							className="link-button"
+							onClick={() => {
+								if (window.confirm(`Forget what is printed of ${printedParts} parts?`)) update({ printed: {} });
+							}}
+						>
+							Clear printed
 						</button>
 					) : null}
 					<input className="search" type="search" placeholder="Filter parts" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter parts" />
@@ -67,6 +116,9 @@ export function PartsTable({ bom, options, settings, update }: Props) {
 								<th>Section</th>
 								<th>Colour</th>
 								<th className="num">Qty</th>
+								<th className="num" title="Pieces already printed: a build prints only the rest">
+									Printed
+								</th>
 								<th className="num">Each</th>
 								<th>Notes</th>
 							</tr>
@@ -74,11 +126,16 @@ export function PartsTable({ bom, options, settings, update }: Props) {
 						<tbody>
 							{lines.map((l) => {
 								const off = l.qty === 0;
+								const done = isDone(l);
 								const isEdited = settings.qty_overrides[l.id] !== undefined;
+								const need = needByColor(l);
+								const mine = settings.printed[l.id] ?? {};
+								// the line's colours, and any it was printed in that it no longer uses
+								const printColors = [...new Set([...Object.keys(need), ...Object.keys(mine)])];
 								const byColor = new Map<string, number>();
 								for (const u of l.units) byColor.set(u.color_id ?? 'any', (byColor.get(u.color_id ?? 'any') ?? 0) + u.count);
 								return (
-									<tr key={l.id} className={off ? 'off' : ''}>
+									<tr key={l.id} className={off ? 'off' : done ? 'done' : ''}>
 										<td className="check">
 											<input
 												type="checkbox"
@@ -108,6 +165,38 @@ export function PartsTable({ bom, options, settings, update }: Props) {
 										<td className="num">
 											<NumberField value={l.qty} min={0} max={1000} onChange={(n) => setQty(l, n)} />
 											{isEdited ? <div className="faint small">needs {l.needed}</div> : null}
+										</td>
+										<td className="num printed">
+											{printColors.length ? (
+												<div className="printed-cell">
+													<div className="printed-fields">
+														{printColors.map((cid) => {
+															const c = colors.get(cid);
+															return (
+																<span key={cid} className="printed-field" title={need[cid] === undefined ? `${c?.name ?? cid}: this part is no longer that colour` : c?.name}>
+																	{printColors.length > 1 ? <Swatch hex={c?.hex ?? '#999999'} size={10} /> : null}
+																	<NumberField value={mine[cid] ?? null} placeholder="0" min={0} max={10000} onChange={(n) => setPrinted(l, cid, n)} />
+																</span>
+															);
+														})}
+													</div>
+													{l.qty > 0 ? (
+														<button
+															type="button"
+															className="done-toggle"
+															aria-pressed={done}
+															aria-label={done ? `Mark ${l.name} not printed` : `Mark all ${l.name} printed`}
+															title={done ? 'Printed. Click to clear.' : 'Mark all printed'}
+															onClick={() => toggleDone(l, done)}
+														>
+															✓
+														</button>
+													) : null}
+												</div>
+											) : (
+												<span className="faint">–</span>
+											)}
+											{l.printed > 0 && l.to_print > 0 ? <div className="faint small">{l.to_print} left</div> : null}
 										</td>
 										<td className="num muted">{l.grams != null ? grams(l.grams) : '–'}</td>
 										<td>

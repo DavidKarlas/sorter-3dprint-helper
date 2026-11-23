@@ -34,7 +34,8 @@ function loadSaved(defaults: Settings): Settings {
 			...saved,
 			role_colors: { ...defaults.role_colors, ...(saved.role_colors ?? {}) },
 			excluded: Array.isArray(saved.excluded) ? saved.excluded : defaults.excluded,
-			excluded_colors: Array.isArray(saved.excluded_colors) ? saved.excluded_colors : defaults.excluded_colors
+			excluded_colors: Array.isArray(saved.excluded_colors) ? saved.excluded_colors : defaults.excluded_colors,
+			printed: saved.printed && typeof saved.printed === 'object' ? saved.printed : defaults.printed
 		};
 	} catch {
 		return defaults;

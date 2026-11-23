@@ -147,6 +147,23 @@ def test_colour_filter_leaves_out_switched_off_colours():
     assert b["stator"].qty == 1 and [(u.color_id, u.count) for u in b["stator"].units] == [("ash-gray", 1)]
 
 
+def test_printed_pieces_are_left_out_per_colour():
+    nema = part("nema", {"feeder": 3}, {"split": [{"color": "charcoal", "qty": 1}, {"color": "ash-gray", "qty": 2}]})
+    gear = part("gear", {"feeder": 4})
+    cat = catalog([nema, gear])
+    b = by_id(build_bom(cat, BuildConfig(printed={"nema": {"ash-gray": 2}, "gear": {"charcoal": 9}})))
+    assert b["nema"].qty == 3 and b["nema"].to_print == 1
+    assert [(u.color_id, u.count) for u in b["nema"].left] == [("charcoal", 1)]
+    assert b["nema"].printed == {"ash-gray": 2}
+    # more printed than needed: done, and only what was needed counts
+    assert b["gear"].to_print == 0 and b["gear"].printed == {"charcoal": 4}
+    # printed in a colour the part no longer uses does not count
+    b = by_id(build_bom(cat, BuildConfig(printed={"gear": {"ivory-white": 4}})))
+    assert b["gear"].to_print == 4 and b["gear"].printed == {}
+    # the colour filter's counts are what is still to print
+    assert sum(u.count for u in by_id(build_bom(cat, BuildConfig(printed={"nema": {"ash-gray": 2}})))["nema"].selected_units) == 1
+
+
 def test_alternative_swaps_parts():
     parts = [part("opi-wall", {"electronics": 1}), part("opi-pro-wall", {})]
     asms = [

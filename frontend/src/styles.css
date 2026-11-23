@@ -18,6 +18,8 @@
 	--primary-ink: #0055bf;
 	--primary-soft: color-mix(in oklab, var(--primary) 12%, transparent);
 	--success: #00852b;
+	--success-soft: color-mix(in oklab, var(--success) 12%, transparent);
+	--success-ink: #00852b;
 	--warning: #ffd500;
 	--warning-soft: color-mix(in oklab, var(--warning) 22%, transparent);
 	--warning-ink: #6e5200;
@@ -54,6 +56,8 @@
 		--danger-ink: #ff6b66;
 		--info-soft: color-mix(in oklab, var(--info) 26%, transparent);
 		--info-ink: #7fb0ff;
+		--success-soft: color-mix(in oklab, var(--success) 24%, transparent);
+		--success-ink: #5fd17f;
 	}
 }
 
@@ -660,6 +664,50 @@ table.parts {
 }
 .parts tr.off td:not(.check):not(.num) {
 	opacity: 0.45;
+}
+.parts tr.done td:not(.check):not(.num) {
+	opacity: 0.45;
+}
+.parts tr.done .part-name {
+	text-decoration: line-through;
+}
+.printed-cell {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+.printed-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	align-items: flex-end;
+}
+.printed-field {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+.done-toggle {
+	width: 28px;
+	height: 28px;
+	flex: none;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--r);
+	background: var(--field);
+	color: var(--ink-faint);
+	cursor: pointer;
+	font: inherit;
+	line-height: 1;
+}
+.done-toggle:hover {
+	background: var(--hover);
+	color: var(--ink);
+}
+.done-toggle[aria-pressed='true'] {
+	background: var(--success-soft);
+	border-color: var(--success);
+	color: var(--success-ink);
+	font-weight: 600;
 }
 .part-name {
 	font-weight: 500;

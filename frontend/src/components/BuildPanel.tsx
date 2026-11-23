@@ -21,7 +21,11 @@ export function BuildPanel({ bom, job, busy, stale, error, onBuild, heavier }: P
 	return (
 		<Panel title="Build">
 			<div className="totals">
-				<Stat label="Parts" value={t ? `${t.pieces}` : '–'} sub={t ? `${t.part_types} kinds` : undefined} />
+				<Stat
+					label="Parts"
+					value={t ? `${t.pieces}` : '–'}
+					sub={t ? `${t.part_types} kinds${t.printed ? ` · ${t.printed} printed already` : ''}` : undefined}
+				/>
 				<Stat
 					label="Filament"
 					value={t ? grams(t.grams) : '–'}
