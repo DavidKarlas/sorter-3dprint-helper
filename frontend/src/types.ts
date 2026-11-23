@@ -29,6 +29,8 @@ export type Settings = {
 	spacing_mm: number;
 	edge_mm: number;
 	group_by: 'color' | 'section';
+	/** turn parts exported on an edge or upside down onto a flat face */
+	auto_orient: boolean;
 };
 
 export type Color = { id: string; name: string; hex: string };

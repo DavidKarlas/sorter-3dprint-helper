@@ -62,6 +62,8 @@ class BuildRequest(BaseModel):
     spacing_mm: float = Field(4.0, ge=1, le=30)
     edge_mm: float = Field(2.0, ge=0, le=20)
     group_by: Literal["color", "section"] = "color"
+    # turn parts exported on an edge or upside down onto a flat face
+    auto_orient: bool = True
 
     @field_validator("qty_overrides")
     @classmethod
@@ -106,7 +108,7 @@ class BuildRequest(BaseModel):
                             outer_wall_speed=self.outer_wall_speed,
                             outer_wall_acceleration=self.outer_wall_acceleration, brim=self.brim,
                             supports=self.supports, spacing_mm=self.spacing_mm, edge_mm=self.edge_mm,
-                            group_by=self.group_by)
+                            group_by=self.group_by, auto_orient=self.auto_orient)
         return cfg, opts
 
 

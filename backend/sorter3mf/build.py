@@ -99,6 +99,10 @@ class PrintOptions:
     support_clearance_mm: float | None = None
     group_by: str = "color"  # color | section
     max_plates_per_file: int = MAX_PLATES
+    # turn parts exported resting on an edge, upside down or standing tall on
+    # a small end onto a flat face (mesh.print_pose); a part the catalog prints
+    # with supports only when it rests on an edge, its overhangs are expected
+    auto_orient: bool = True
 
 
 @dataclass
@@ -182,7 +186,8 @@ def _safe(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "-", name).strip("-") or "sorter"
 
 
-def prepare_parts(lines: list[BomLine], progress: Progress) -> tuple[dict[str, PreparedPart], list[str]]:
+def prepare_parts(lines: list[BomLine], progress: Progress,
+                  auto_orient: bool = True) -> tuple[dict[str, PreparedPart], list[str]]:
     """Download (or reuse) and pose every STL the BOM prints."""
     wanted = {l.id: l for l in lines if l.to_print > 0}
     out: dict[str, PreparedPart] = {}
@@ -192,7 +197,8 @@ def prepare_parts(lines: list[BomLine], progress: Progress) -> tuple[dict[str, P
     headers = {"User-Agent": config.USER_AGENT}
     with httpx.Client(headers=headers, follow_redirects=True) as client, \
             ThreadPoolExecutor(max_workers=config.DOWNLOAD_WORKERS) as pool:
-        futs = {pool.submit(lambda l=l: prepare(l.id, fetch_stl(l.stl_url, client), l.stl_url)): pid
+        futs = {pool.submit(lambda l=l: prepare(l.id, fetch_stl(l.stl_url, client), l.stl_url, auto_orient,
+                                                bool(l.part.get("support_intentional")))): pid
                 for pid, l in wanted.items()}
         for f in as_completed(futs):
             pid = futs[f]
@@ -327,7 +333,7 @@ def run_build(cat: Catalog, cfg: BuildConfig, opts: PrintOptions, out_dir: Path,
     if not any(l.to_print > 0 for l in lines):
         raise ValueError("Nothing to print: every part is switched off or already printed.")
 
-    prepared, errors = prepare_parts(lines, progress)
+    prepared, errors = prepare_parts(lines, progress, opts.auto_orient)
     progress("pack", 0.0, "Arranging plates")
     plates, warnings = plan_plates(cat, lines, prepared, printer, opts, palette,
                                    grams_factor(cat, printer, opts.filament))

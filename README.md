@@ -128,6 +128,30 @@ volumes:
    the pose from the curated bracket plate; the Orange Pi housing walls are
    laid flat). Each part is also turned about Z so its footprint box is as
    small as possible.
+
+   Every other part keeps its exported pose, which carries what geometry
+   cannot see (layer lines across the load, a clean face, round holes),
+   unless that pose prints badly: about twenty parts are exported the way
+   they sit in the machine. `mesh.print_pose` turns a part onto one of its
+   flat outer faces when, as exported,
+
+   - it rests on an edge or a corner (the bins, the camera lamp arm and
+     ring, the interface spacer),
+   - a different face leaves at least 2,000 mm² and 60% less surface facing
+     down in mid-air (the lamp covers and the control board cover, exported
+     upside down), or
+   - it is a plate standing tall on its narrow end (under a tenth of its
+     biggest face on the bed, at least three times as tall as lying down:
+     the arm brackets, the output guide, the C-channel 2 support leg), and
+     lying down adds no overhang.
+
+   The face it picks is the one with the least overhang, ties going to the
+   bigger face. Parts the catalog prints with supports are turned only off
+   an edge; their other overhangs are expected. The build report lists
+   every part it turned. Sliced in Bambu Studio with supports on, the bins
+   and covers need 70 to 215 g of support each as exported and next to none
+   turned; the standing plates need none lying down and print up to four
+   times faster. "Part poses" in the print settings switches this off.
 5. **Plates** (`packing.py`) are filled per colour (or per section and
    colour), so no plate needs a filament change. Footprint boxes are packed
    with MaxRects; parts may turn 90°. Each plate's parts are then moved as

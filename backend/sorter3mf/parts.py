@@ -18,10 +18,11 @@ import httpx
 import numpy as np
 
 from . import config
-from .mesh import Mesh, convex_hull_2d, largest_face_down, min_area_angle, read_stl, rot_x, rot_z, simplify_polygon
+from .mesh import (Mesh, convex_hull_2d, largest_face_down, min_area_angle, print_pose, read_stl, rot_x, rot_z,
+                   simplify_polygon)
 
 # Bump when the preparation below changes, so cached prepared meshes are redone.
-PREP_VERSION = 3
+PREP_VERSION = 6
 HINTS: dict = json.loads((Path(__file__).resolve().parent / "orientation.json").read_text())
 
 _HASH_RE = re.compile(r"-([0-9a-f]{12})\.stl$")
@@ -92,8 +93,16 @@ def _hint_rotation(part_id: str, mesh: Mesh, stl_url: str) -> tuple[np.ndarray, 
     return np.eye(3), None
 
 
-def prepare(part_id: str, stl_path: Path, stl_url: str) -> PreparedPart:
-    sig = hashlib.sha1(json.dumps([PREP_VERSION, stl_path.name, HINTS.get(part_id)], sort_keys=True).encode()).hexdigest()[:16]
+def prepare(part_id: str, stl_path: Path, stl_url: str, auto_orient: bool = False,
+            supported: bool = False) -> PreparedPart:
+    """The part in its print pose: a hint from orientation.json when there is
+    one, else the exported pose, which `auto_orient` may turn when the part
+    rests on an edge, prints upside down or stands tall on a small end
+    (mesh.print_pose). A part printed with supports on purpose (`supported`)
+    is turned only off an edge."""
+    auto = auto_orient and part_id not in HINTS
+    sig = hashlib.sha1(json.dumps([PREP_VERSION, stl_path.name, HINTS.get(part_id), auto, auto and supported],
+                                  sort_keys=True).encode()).hexdigest()[:16]
     cache = _prep_dir() / f"{part_id}-{sig}.npz"
     if cache.exists():
         z = np.load(cache, allow_pickle=False)
@@ -105,6 +114,10 @@ def prepare(part_id: str, stl_path: Path, stl_url: str) -> PreparedPart:
     lo, hi = mesh.bounds
     mesh = Mesh(mesh.vertices - (lo + hi) / 2, mesh.triangles)
     rot, note = _hint_rotation(part_id, mesh, stl_url)
+    if auto:
+        turned, why = print_pose(mesh, edge_only=supported)
+        if turned is not None:
+            rot, note = turned, why
     mesh = mesh.transformed(rot)
     # turn about z so the footprint box is as small as it gets
     hull = convex_hull_2d(mesh.vertices[:, :2])

@@ -203,6 +203,12 @@ export function PrintPanel({ settings, options, update }: Props) {
 					]}
 				/>
 			</Row>
+			<Row
+				label="Part poses"
+				hint="A few parts are exported the way they sit in the machine: on an edge (the bins), upside down with a roof in mid-air (the lamp covers), or a thin plate standing on its end (the arm brackets). These are turned onto the flat face that needs the least support; the build report lists them."
+			>
+				<Toggle checked={settings.auto_orient} onChange={(v) => update({ auto_orient: v })} label="Turn parts that would print badly as exported" />
+			</Row>
 			<Row label="Plates" hint="One colour per plate either way, so no filament changes are needed.">
 				<Segmented
 					label="Group plates by"
